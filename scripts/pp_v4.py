@@ -28,11 +28,11 @@ def clean_tokenizer(out):
     # Starts from 1 to remove 'bytearray' prefix
     return tokens
 
-def processor(name, url, tokens, db_path,json_dir):
+def vectorizer(tokens, w2v_db):
+    db_path = w2v_db
     # POS TAGGING
     tagger = POSTagger('tagger/english-left3words-distsim.tagger', 'tagger/stanford-postagger.jar')
     tagged_tokens = tagger.tag(tokens)
-
     unsorted_kw = OrderedDict()
     for (w,t) in tagged_tokens:
         if t in ['NNP', 'NNPS', 'FW']:
@@ -46,8 +46,7 @@ def processor(name, url, tokens, db_path,json_dir):
             unsorted_kw[w] += label
         except KeyError:
             unsorted_kw[w] = label
-
-    # Get the vectors list
+    # Get the vectors of words. Maintain order as in document.
     token_vecs = OrderedDict()
     conn = SQLCon(db_path)
     words = (word.lower() for word in unsorted_kw)
@@ -58,22 +57,25 @@ def processor(name, url, tokens, db_path,json_dir):
             v = conn.read(word)
             if not v is None:
                 token_vecs[word] = list(v)
-    print("kw_len: {0} vec_len: {1}".format(len(unsorted_kw), len(token_vecs)))
+    print("kw_len: {0} vec_len: {1}".format(len(unsorted_kw), len(token_vecs))) #Output for debugging; total vs unique words.
     conn.close()
+    return unsorted_kw, token_vecs
 
+def clusterizer(token_vecs):
     #Compute cluster centers:
     nk = round(len(token_vecs)/4)
     data = numpy.array(list(token_vecs.values()))
     cent, _ = kmeans2(data,nk,iter=20,minit='points')
     centroids = cent.tolist()
-
-    # Create the JSON object for this webpage.
-
+    return centroids
+    
+def jsonizer(json_dir, jsonname, filepath, vecs, kw_freq, centroids):
+    # Create the JSON object for this document.
     if not os.path.exists(json_dir):
         os.makedirs(json_dir)
-    json_path = os.path.join(json_dir,name+'.json')
+    json_path = os.path.join(json_dir,jsonname+'.json')
     file_dest = open(json_path, 'w')
-    json.dump({'url': url, 'vectors' : token_vecs, 'keyword_frequency': unsorted_kw, 'centroids' : centroids}, file_dest)
+    json.dump({'src_file': filepath, 'vectors' : vecs, 'keyword_frequency': kw_freq, 'centroids' : centroids}, file_dest)
     file_dest.close()
 
 
@@ -85,21 +87,21 @@ def csv_to_json(csvfile,db_path,extension='.txt'):
     except NotADirectoryError:
         flag = False
         pass
-
     f = open(csvfile,'r')
     reader = csv.reader(f)
     for row in reader:
         if len(row[2])<100: continue #100 is arbitrary
-        tokens = clean_tokenizer(row[2])
         id = int(row[0])
         category = row[1]
-        filename = category+'_'+id
-        processor(filename, '', tokens, db_path,json_dir)
+        tokens = clean_tokenizer(row[2])
+        jsonname = category+'_'+id
+        kw_freq, vecs = vectorizer(tokens, db_path)
+        centroids = clusterizer(vecs)
+        jsonizer(json_dir, jsonname, None, vecs, kw_freq, centroids):
+        
 
 
 def test():
-    # html_to_json('/home/surajman/PycharmProjects/BEProj/acm/Part 3/','/home/surajman/PycharmProjects/BEProj/w2v.db')
-    # print(get_html_contents('/home/surajman/websites/lread/web/videos.html'))
     csv_to_json('/home/surajman/PycharmProjects/BEProj/20NG/b_a_20news.csv','/home/surajman/PycharmProjects/BEProj/w2v.db')
 
 
