@@ -54,7 +54,7 @@ class SQLCon:
         vecQ = vecQuery % word
         cur.execute(vecQ)
         conn.commit()
-        vec = cur.fetchone()
+        vec = cur.fetchone() # Tuple of all columns in that row
         return vec
 
     def close(self):
