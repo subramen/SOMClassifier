@@ -29,17 +29,11 @@ import jinja2
 
 
 THIS_FOLDER = os.path.dirname(os.path.realpath(__file__))
-
 ITERATIONS_MAX = 10
 LEARNING_RATE_0 = 0.5
 
 logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s', level=logging.INFO, filename='/home/surajman/one.log')
 logger = logging.getLogger(__name__)
-
-# from logging.config import fileConfig
-# fileConfig('logging_config.ini')
-# logger = logging.getLogger("Search")
-# Commented because logging is very erratic
 
 #jinja variables to render results.html
 templateLoader = jinja2.FileSystemLoader( searchpath=THIS_FOLDER )
@@ -87,13 +81,11 @@ class Map:
         time_const = ITERATIONS_MAX/radius0   #Lambda
         find_bmu = self.find_bmu
         toarray = np.array
-
         logger.info("Sigma0:%s TimeConst:%s", radius0, time_const)
 
         while epoch <= ITERATIONS_MAX:
             learning_rate = LEARNING_RATE_0 * math.exp(-(epoch/time_const))
             epoch_radius = radius0 * math.exp(-(epoch/time_const))
-
             # Iterate over JSONs
             filelist = os.listdir(dirname)
             nb_tot_files = len(filelist)
@@ -105,7 +97,6 @@ class Map:
                         vec_dict = data['vectors']
                 except IsADirectoryError:
                     continue
-
                 # Competition - Find BMU
                 items = (w for w in vec_dict.items())
                 for (word,vec) in items:
@@ -243,20 +234,13 @@ class Map:
 
 
 def test():
-    # algo = Map([8,8],200)
-    # algo.learn()
-    #
-    # algo.classify()
-
-    # with open('trial.pkl','wb') as op:
-    #     pickle.dump(algo,op,pickle.HIGHEST_PROTOCOL)
-
     with open('/home/surajman/PycharmProjects/BEProj/docsouth/test/maps/ds_morelearn','rb') as f:
         algo = pickle.load(f)
     algo.search('dark eerie mystery ghost','/home/surajman')
     # for n in algo._neurons:
     #     pprint(n.get_data())
 
+#dirname=destination_dir    pkl_name='save as' name of this map
 def train(dirname,pkl_name):
     json_dir = os.path.join(dirname,'json')
     pkl_dir = os.path.join(dirname,'maps')
