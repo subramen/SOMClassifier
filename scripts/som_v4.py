@@ -1,7 +1,4 @@
 # FOR LATER
-# Work on dynamicism of word2vec. It should learn new terms/words. Use some lookup ontology.
-# Phrase/MWE recognition
-# Consider HDFS
 # One search across multiple Map objects (Separation of 'search' as a class)
 # Implement in cython/pypy
 
@@ -205,7 +202,6 @@ class Map:
             for nid in dist_neu_searchq.most_common()[:depth]:
                 neuron = neuron_lookup[nid[0]]
                 doclist.update(neuron.get_top_docs(30))
-
             files = (open(doc) for doc in doclist)
             for json_file in files:
                 data = json.load(json_file)
