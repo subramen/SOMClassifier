@@ -1,3 +1,7 @@
+#Change tagger to tree-tagger
+#Use ndarrays to store tokens of each input document.
+
+
 __author__ = 'surajman'
 from collections import Counter
 import json
@@ -19,9 +23,9 @@ logging.basicConfig(level=logging.INFO, filename='/home/surajman/one.log')
 logger = logging.getLogger(__name__)
 
 def clean_tokenizer(out):
-    out = re.sub(r'(\.)(^ )', r'\1 \2', out)  # Separates any done.Further type non-spacing
+    out = re.sub(r'(\.)(^ )', r'\1 \2', out)  # Separates any 'done.Further' type non-spacing
     out = re.sub(r'\W+', ' ', out)  # Remove non words
-    out = re.sub(r' x\w+', '', out)  # Remove crap like \x94 etc
+    out = re.sub(r' x\w+', '', out)  # Remove encoding crap like \x94 etc
     out = re.sub(r'\d+', '', out)  # Remove digits
     out = re.sub(r' . ', ' ', out)  # Remove single chars
     tokens = [word for word in word_tokenize(out)[1:] if word.lower() not in stopwords.words('english')]
@@ -39,6 +43,7 @@ def vectorizer(tokens, w2v_db):
             label = 1.5
         elif t in ['NN', 'NNS']:
             label = 1
+            
         else:
             continue
         w = w.lower()
